@@ -1,17 +1,43 @@
 # ChoVersion
 ### The Chocolatey Version Picker
 
-This is a PowerShell module for switching between versions of command-line tools.
+## Install
 
-It currently accomplishes this simply: by prepending the path to the specific version to your environment PATH. Note that it does this in such away that it works locally on the PowerShell session you're in, but should also affect the rest of the build pipeline in Azure DevOps Pipelines and GitHub Actions..
+I'm still not sure this is done, so you need to `-AllowPreRelease` in order to install it:
+
+```PowerShell
+Install-Module ChoVersion -AllowPrerelease
+```
+
+## Usage
+
+The simplest form is to specify each executable package you need to configure, like this:
+
+```PowerShell
+Set-ChoVersion terraform 0.14.9
+Set-ChoVersion terragrunt 0.28.18
+```
+
+For a configuration-based approach, see the documentation of [ChoVersion.psd1](#supports-a-choversionpsd1-configuration) below.
+
+## About ChoVersion
+
+ChoVersion is a PowerShell module for switching between versions of command-line tools. The name is deliberately abiguously short for "Choco Version" or "Choose Version" and when people hear "Set-ChoVersion" it should sound like "set yo' version". Our unofficial mascot is [Cho'gath, the terror of the void](https://na.leagueoflegends.com/en-us/champions/cho-gath/).
+
+It currently accomplishes switching apps simply: by prepending the path to the specific version on your environment PATH variable. Note that it does this in such away that it works locally on the PowerShell session you're in, but should also affect the rest of the build pipeline in Azure DevOps Pipelines and GitHub Actions..
 
 It currently depends on using [chocolatey](https://chocolatey.org) as the installer, installing multiple versions of tools side-by-side, and then letting you pick one to use by changing which one is currently in your path. This makes it Windows only, but means that it will work out of the box on [Microsoft's hosted agents](https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md). As long as you run it with sufficient rights, it can install missing tools for you -- although it does not yet use the agent's "tools" folder to install or cache the tools.
 
 It also offers an experimental switch to change your current user's environment PATH permanently, so you can use it to switch between versions on your local box in a way that affects all new processes (but no existing processes except the current PowerShell session).
 
-## Supports a `ChoVersion.psd1` file
+### Regarding build
 
-To quickly specify dependency versions, you can add a `ChoVersion.psd1` file to any folder. For instance, if you add this ChoVersion.psd1
+Since I've only spent a few hours over the weekend on this, and I mostly wanted to proove it could work, there are not yet tests, so the CI build is failing.
+
+## Supports a `ChoVersion.psd1` configuration
+
+To quickly specify dependency versions, you can add a `ChoVersion.psd1` configuration file to any folder. For instance, if you add this ChoVersion.psd1:
+
 ```PowerShell
 @{
 Chocolatey = @"
@@ -20,7 +46,8 @@ terragrunt|0.28.18
 "@
 }
 ```
-Simply running `Set-ChoVersion` in that folder will (install and) switch to the specified version of terraform and terragrunt -- assuming they're available in your chocolatey lib folder (or your chocolatey sources).
+
+Then simply running `Set-ChoVersion` in that folder will (install and) switch to the specified version of terraform and terragrunt -- assuming they're available in your chocolatey lib folder (or your chocolatey sources).
 
 ### I feel like I should apologize for the odd syntax of that file....
 
