@@ -6,7 +6,7 @@ filter Add-ToolPath {
     [CmdletBinding()]
     param(
         # The path to prepend to the PATH environment variable
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0)]
         [string]$Path,
 
         # If set, and on Windows, update the user's PATH

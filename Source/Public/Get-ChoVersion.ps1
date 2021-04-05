@@ -1,21 +1,28 @@
 filter Get-ChoVersion {
     [CmdletBinding()]
     param(
-        [Parameter(ValueFromPipelineByPropertyName, Mandatory)]
+        # The name of the chocolatey package
+        [Parameter(ValueFromPipelineByPropertyName, Mandatory, Position = 0)]
         [string]$Package,
 
+        # The version of the chocolatey package
         [Parameter(ValueFromPipelineByPropertyName)]
         [string]$Version,
 
+        # The base name of the executable (without the .exe), like "terraform"
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string]$Application = "*"
+        [string]$Executable = "*",
+
+        # If set, lists all versions available.
+        # Otherwise, Get-ChoVersion only returns the specified or newest version
+        [switch]$ListAvailable
     )
-    if (!$Application) {
-        $Application = "*"
+    if (!$Executable) {
+        $Executable = "*"
     }
     $Pattern = $Package -replace "[-\.]", "|"
     $ChildParam = @{
-        Filter = "$Application.exe"
+        Filter = "$Executable.exe"
         Recurse = $true
         OutVariable = "App"
     }
@@ -33,7 +40,21 @@ filter Get-ChoVersion {
         return
     }
 
-    $ChocoApplications.ForEach{
+    if ($ChocoApplications.Count -gt 1) {
+        # On Windows PowerShell, there's no built-in [semver] type accelerator
+        if (-not ('semver' -as [type])) {
+            Import-Module PackageManagement -Scope Global
+            $xlr8r = [psobject].assembly.gettype("System.Management.Automation.TypeAccelerators")
+            $xlr8r::Add('semver', [Microsoft.PackageManagement.Provider.Utility.SemanticVersion])
+        }
+        $ChocoApplications = $ChocoApplications | Sort-Object { [semver]$_.Version } -Descending
+
+        if (!$ListAvailable) {
+            $ChocoApplications = $ChocoApplications[0]
+        }
+    }
+
+    @($ChocoApplications).ForEach{
         Add-Member -InputObject $_ -Passthru -NotePropertyName Path -NotePropertyValue $(
             if (Test-Path "$Env:ChocolateyInstall\lib\$($_.Package).$($_.Version)") {
                 $ChildParam["Path"] = "$Env:ChocolateyInstall\lib\$($_.Package).$($_.Version)"
@@ -43,7 +64,7 @@ filter Get-ChoVersion {
 
             Get-ChildItem @ChildParam | Convert-Path | Where-Object {
                 # we can try matching based on the package name
-                $Application -ne "*" -or $_ -match $Pattern
+                $Executable -ne "*" -or $_ -match $Pattern
             } | Select-Object -Unique -First 1
         )
     }

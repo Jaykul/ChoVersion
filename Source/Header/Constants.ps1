@@ -1,3 +1,7 @@
+if ($PSScriptRoot -match 'Header$') {
+    Write-Warning "This module isn't really meant to be imported from source. YMMV"
+    $PSScriptRoot = $PSScriptRoot | Split-Path
+}
 $Shim = Get-FileHash "$PSScriptRoot\lib\shim.exe" -ErrorAction SilentlyContinue -ErrorVariable MissingShim
 if ($MissingShim) {
     Write-Error "The 'shim.exe' is missing from '$PSScriptRoot\lib' and ChoVersion will not work. Please reinstall ChoVersion."

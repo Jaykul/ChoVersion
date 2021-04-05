@@ -1,27 +1,42 @@
 filter Set-ChoVersion {
-    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = "Many")]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = "Chocolatey", ConfirmImpact = "Medium")]
     param(
-        [Parameter(ParameterSetName = "One", Mandatory, ValueFromPipelineByPropertyName)]
+        # The name of the chocolatey package
+        [Parameter(ParameterSetName = "One", Mandatory, ValueFromPipelineByPropertyName, Position = 0)]
         [string]$Package,
 
-        [Parameter(ParameterSetName = "One", ValueFromPipelineByPropertyName)]
+        # The version of the chocolatey package
+        [Parameter(ParameterSetName = "One", ValueFromPipelineByPropertyName, Position = 1)]
         [string]$Version,
 
-        [Parameter(ValueFromPipelineByPropertyName)]
-        [string[]]$Application,
+        # The base name of the executable (without the .exe), like "terraform"
+        [Parameter(ParameterSetName = "One", ValueFromPipelineByPropertyName)]
+        [string]$Executable,
 
+        # Supports a table syntax for specifying multiple applications at once:
+        # PackageName|Version
+        # or even:
+        # PackageName|Version|ExecutableBaseName
+        #
+        # For example:
+        # "terraform|0.14.9"
+        [Parameter(ValueFromPipelineByPropertyName, ParameterSetName = "Chocolatey")]
+        [string[]]$Chocolatey,
+
+        # If set, makes the change permanent for the current user by modifying their PATH at user scope
         [switch]$SetForUserExperimental
     )
     Import-ParameterConfiguration
 
-    if (-not $Package -and $Application) {
-        $Application -replace "[ \|=]", "," |
-            ConvertFrom-Csv -Header Package, Version, Application |
+    if ($Chocolatey) {
+        $Chocolatey -replace "[ \|=]", "," |
+            ConvertFrom-Csv -Header Package, Version, Executable |
             Set-ChoVersion -SetForUserExperimental:$SetForUserExperimental
         return
     }
     $null = $PSBoundParameters.Remove("SetForUserExperimental")
-    Write-Verbose "Setting choco package '$Package'$(if($Version){ " version $Version" })$(if($Application){ " application $Application" })"
+    $null = $PSBoundParameters.Remove("Confirm")
+    Write-Verbose "Setting choco package '$Package'$(if($Version){ " version $Version" })$(if($Executable){ " for executable $Executable" })"
 
     if (!(($ChoPackage = Get-ChoVersion @PSBoundParameters -ErrorAction Ignore))) {
         if ($Version) {
@@ -37,5 +52,8 @@ filter Set-ChoVersion {
         # nothing to do, it's already the default
         return
     }
-    $ChoPackage | Add-ToolPath -SetForUserExperimental:$SetForUserExperimental
+
+    if ($PSCmdlet.ShouldProcess("Use $($ChoPackage.Package) v$($ChoPackage.Version)", "Prepend PATH for '$($ChoPackage.Path)'")) {
+        $ChoPackage | Add-ToolPath -SetForUserExperimental:$SetForUserExperimental
+    }
 }
