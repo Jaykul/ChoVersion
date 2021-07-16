@@ -26,8 +26,6 @@ filter Set-ChoVersion {
         # If set, makes the change permanent for the current user by modifying their PATH at user scope
         [switch]$SetForUserExperimental
     )
-    Import-ParameterConfiguration
-
     if ($PSCmdlet.ParameterSetName -eq 'Chocolatey') {
         if (-not $Chocolatey) {
             # Only import default parameters if we actually need them
