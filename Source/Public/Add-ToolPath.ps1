@@ -7,6 +7,7 @@ filter Add-ToolPath {
     param(
         # The path to prepend to the PATH environment variable
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0)]
+        [ValidateScript({ Test-Path $_ })]
         [string]$Path,
 
         # If set, and on Windows, update the user's PATH
@@ -16,10 +17,6 @@ filter Add-ToolPath {
     # If they pass the path to a file, we'll look at the folder
     if (Test-Path $Path -PathType Leaf) {
         $Path = Split-Path $Path
-    }
-
-    if (!(Test-Path $Path -PathType Container)) {
-        throw "Can't add a non-existent path. Path not found: '$Path'"
     }
 
     $ChocoLib = "$Env:ChocolateyInstall\lib\"
