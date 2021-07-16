@@ -1,1 +1,4 @@
+# ignore output (because we put stuff there)
 Output/
+# Ignore version number folders (these are our intermediate "output" directories for testing)
+[0-9]*/
