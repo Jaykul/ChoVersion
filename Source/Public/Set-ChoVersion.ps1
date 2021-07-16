@@ -28,12 +28,19 @@ filter Set-ChoVersion {
     )
     Import-ParameterConfiguration
 
-    if ($Chocolatey) {
-        $Chocolatey -replace "[ \|=]", "," |
-            ConvertFrom-Csv -Header Package, Version, Executable |
-            Set-ChoVersion -SetForUserExperimental:$SetForUserExperimental
-        return
+    if ($PSCmdlet.ParameterSetName -eq 'Chocolatey') {
+        if (-not $Chocolatey) {
+            # Only import default parameters if we actually need them
+            Import-ParameterConfiguration
+        }
+        if ($Chocolatey) {
+            $Chocolatey -replace "[ \|=]", "," |
+                ConvertFrom-Csv -Header Package, Version, Executable |
+                Set-ChoVersion -SetForUserExperimental:$SetForUserExperimental
+            return
+        }
     }
+    
     $null = $PSBoundParameters.Remove("SetForUserExperimental")
     $null = $PSBoundParameters.Remove("Confirm")
     Write-Verbose "Setting choco package '$Package'$(if($Version){ " version $Version" })$(if($Executable){ " for executable $Executable" })"
