@@ -33,7 +33,7 @@ filter Add-ToolPath {
     #         Copy-Item $Shim $ExecutablePath -Force
     #     } catch [UnauthorizedAccessException] {
     #         Write-Warning "Elevating to overwrite the chocolatey shim at: $ExecutablePath"
-    #         $pwsh = Get-Command PowerShell, pwsh -ErrorAction Ignore | Select-Object -First 1
+    #         $pwsh = Get-Command PowerShell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1
     #         Start-Process $pwsh.Name -Verb RunAs -ArgumentList "-Command", "Copy-Item", $Shim, $ExecutablePath
     #     }
     # } else {

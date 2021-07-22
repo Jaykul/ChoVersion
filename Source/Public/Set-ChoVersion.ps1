@@ -68,7 +68,7 @@ filter Set-ChoVersion {
     $null = $PSBoundParameters.Remove("Confirm")
     Write-Verbose "Setting choco package '$Package'$(if($Version){ " version $Version" })$(if($Executable){ " for executable $Executable" })"
 
-    if (!(($ChoPackage = Get-ChoVersion @PSBoundParameters -ErrorAction Ignore))) {
+    if (!(($ChoPackage = Get-ChoVersion @PSBoundParameters -ErrorAction SilentlyContinue))) {
         if ($Version) {
             choco install -y $Package --version $Version --sxs
         } else {
