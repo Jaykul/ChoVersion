@@ -4,7 +4,7 @@
 ModuleToProcess = 'ChoVersion.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.0.3'
 
 # ID used to uniquely identify this module
 GUID = '60fc0027-8325-4fd5-8109-7d86cc123193'

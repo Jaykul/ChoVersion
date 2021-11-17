@@ -35,7 +35,7 @@ filter Set-ChoVersion {
 
         # The base name of the executable (without the .exe), like "terraform"
         [Parameter(ParameterSetName = "One", ValueFromPipelineByPropertyName)]
-        [string]$Executable,
+        [string]$Executable = ($Package -replace "\.portable$|\.install$"),
 
         # An array of hashtables specifying multiple applications to set or install
         # This parameter is intended to support configuration via a ChoVersion.psd1 file like:
@@ -77,7 +77,7 @@ filter Set-ChoVersion {
         $ChoPackage = Get-ChoVersion @PSBoundParameters -ErrorAction Stop
     }
 
-    $ExecutablePath = Get-Command $Package | Convert-Path
+    $ExecutablePath = Get-Command $Executable -ErrorAction SilentlyContinue | Convert-Path
     if ($ExecutablePath -eq $ChoPackage.Path) {
         # nothing to do, it's already the default
         return
