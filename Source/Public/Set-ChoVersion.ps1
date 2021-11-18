@@ -63,6 +63,10 @@ filter Set-ChoVersion {
             return
         }
     }
+    # Set executable from Package if it's piped in empty
+    if (!$Executable -and $Package) {
+        $Executable = $Package -replace ".+\.portable$|.+\.install$"
+    }
 
     $null = $PSBoundParameters.Remove("SetForUserExperimental")
     $null = $PSBoundParameters.Remove("Confirm")
