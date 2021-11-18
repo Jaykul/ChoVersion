@@ -32,7 +32,12 @@ It also offers an experimental switch to change your current user's environment 
 
 ### Regarding build
 
-Since I've only spent a few hours over the weekend on this, and I mostly wanted to proove it could work, there are not many tests, so the CI build may be failing, but the .\build.ps1 script is working, and the tests that are there pass.
+You can run `.\build.ps1` to build, and use `Invoke-Pester` to execute test it.
+
+[![Build on push](https://github.com/Jaykul/ChoVersion/actions/workflows/build.yml/badge.svg)](https://github.com/Jaykul/ChoVersion/actions/workflows/build.yml)
+
+Since I've only spent a few hours on this, and I mostly wanted to prove it could work, there were not many tests.
+However, the CI build is now working, and I've started adding tests.
 
 ## Supports a `ChoVersion.psd1` configuration
 
