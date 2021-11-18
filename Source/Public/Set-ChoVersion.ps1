@@ -2,10 +2,20 @@ filter Set-ChoVersion {
     <#
         .SYNOPSIS
             Set which version of a chocolatey tool package should be used.
-        .EXAMPLE
-            Set-ChoVersion terraform 0.13.2
+        .DESCRIPTION
+            Set-ChoVersion changes your PATH environment variable to include the
+            Chocolatey lib folder for the specified version of the package.
 
-            Switches to terraform version 0.13.2
+            If it's not already installed, it will be installed.
+        .EXAMPLE
+            Set-ChoVersion terraform
+
+            Ensures that terraform is available on the PATH without worrying about the version
+        .EXAMPLE
+            Set-ChoVersion gitversion.portable 5.8.1
+
+            Ensures that gitversion version 5.8.1 is available on the PATH
+            Set-Choversion will assume that the executable is named "gitversion" because it knows about ".portable" and ".install" package conventions
         .Example
             Set-ChoVersion @{ Package = "terraform"; Version = "1.0.1" },
                            @{ Package = "bicep"; Version = "0.4.6" }
@@ -14,14 +24,17 @@ filter Set-ChoVersion {
         .Example
             Set-Content ChoVersion.psd1 @"
             @{ ChocolateyPackages = @(
-                @{ Package = "terraform"; Version = "1.0.1" }
-                @{ Package = "bicep"; Version = "0.4.6" }
+                @{
+                    Package = "gitversion.portable"
+                    Executable = "gitversion"
+                    Version = "5.8.1"
+                }
                 )
             }
             "@
             Set-ChoVersion
 
-            Shows how a psd1 file can be used in a project repository to support installing tool dependencies and using specific versions of tools
+            Shows how a psd1 file can be used in a project repository to support installing tool dependencies and using specific versions of tools.
     #>
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = "Chocolatey", ConfirmImpact = "Medium")]
     param(
@@ -46,16 +59,32 @@ filter Set-ChoVersion {
         # If set, makes the change permanent for the current user by modifying their PATH at user scope
         [switch]$SetForUserExperimental
     )
-    Write-Verbose $PSCmdlet.ParameterSetName
+    # Set executable from Package if it's piped in empty
+    if (!$Executable -and $Package) {
+        $Executable = $Package -replace ".+\.portable$|.+\.install$"
+    }
+    # There's got to be an easier way to show *all* parameter values (including defaults)
+    if ($DebugPreference -eq "Continue") {
+        $Parameters = @($PSCmdlet.MyInvocation.MyCommand.Parameters.Keys)
+        Write-Debug (@(
+            $MyInvocation.MyCommand.Name
+            $((Get-Variable -Name $Parameters -Scope Local -ErrorAction SilentlyContinue).
+                Where({$_.Value}).
+                ForEach({ "-" + $_.Name, $_.Value})
+            )
+            "$([char]27)[90m# ParameterSet:"
+            $PSCmdlet.ParameterSetName
+            "$([char]27)[0m"
+        ) -join " ")
+    }
     if ($PSCmdlet.ParameterSetName -eq 'Chocolatey') {
         if (-not $ChocolateyPackages) {
             # Only import default parameters if we actually need them
             Import-ParameterConfiguration
         }
         if ($ChocolateyPackages) {
-            Write-Verbose "Installing multiple ChocolateyPackages: "
             $Packages = $ChocolateyPackages.ForEach{ [PSCustomObject]$_ }
-            Write-Verbose $($Packages | Format-Table -Auto | Out-String)
+            Write-Verbose "Installing multiple ChocolateyPackages: $($Packages | Format-Table -Auto | Out-String)"
             $Packages | Set-ChoVersion -SetForUserExperimental:$SetForUserExperimental
             return
         } else {
@@ -63,14 +92,10 @@ filter Set-ChoVersion {
             return
         }
     }
-    # Set executable from Package if it's piped in empty
-    if (!$Executable -and $Package) {
-        $Executable = $Package -replace ".+\.portable$|.+\.install$"
-    }
 
     $null = $PSBoundParameters.Remove("SetForUserExperimental")
     $null = $PSBoundParameters.Remove("Confirm")
-    Write-Verbose "Setting choco package '$Package'$(if($Version){ " version $Version" })$(if($Executable){ " for executable $Executable" })"
+    Write-Verbose "Setting choco package '$Package'$(if($Version){ " version $Version" })$(if($Executable){ " for $Executable" })"
 
     if (!(($ChoPackage = Get-ChoVersion @PSBoundParameters -ErrorAction SilentlyContinue))) {
         if ($Version) {

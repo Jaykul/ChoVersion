@@ -42,6 +42,11 @@ PrivateData = @{
         # The semver pre-release version information
         PreRelease = ''
 
+        # Release notes for this particular version of the module
+        ReleaseNotes = '
+        Fixed a bug using Set-ChoVersion with packages with names that did not match the executable
+        '
+
         # Keyword tags to help users find this module via navigations and search.
         Tags = @('Chocolatey','Version','Install')
 
@@ -50,10 +55,6 @@ PrivateData = @{
 
         # The web address of this module's license. Points to a page that's embeddable and linkable.
         LicenseUri = "http://opensource.org/licenses/MIT"
-
-        # Release notes for this particular version of the module
-        ReleaseNotes = '
-        '
     }
 }
 
