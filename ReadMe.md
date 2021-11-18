@@ -3,10 +3,10 @@
 
 ## Install
 
-I'm still not sure this is done, so you need to `-AllowPreRelease` in order to install it:
+Install it from the PowerShell gallery:
 
 ```PowerShell
-Install-Module ChoVersion -AllowPrerelease
+Install-Module ChoVersion
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ It also offers an experimental switch to change your current user's environment 
 
 ### Regarding build
 
-Since I've only spent a few hours over the weekend on this, and I mostly wanted to proove it could work, there are not yet tests, so the CI build is failing.
+Since I've only spent a few hours over the weekend on this, and I mostly wanted to proove it could work, there are not many tests, so the CI build may be failing, but the .\build.ps1 script is working, and the tests that are there pass.
 
 ## Supports a `ChoVersion.psd1` configuration
 
@@ -40,23 +40,43 @@ To quickly specify dependency versions, you can add a `ChoVersion.psd1` configur
 
 ```PowerShell
 @{
-Chocolatey = @"
-terraform|0.14.9
-terragrunt|0.28.18
-"@
+ChocolateyPackages = @(
+    @{
+        Package = "bicep"
+        Version = "0.4.1008"
+    }
+    @{
+        Executable = "gitversion"
+        Package = "gitversion.portable"
+        Version = "5.8.1"
+    }
+)
 }
 ```
 
 Then simply running `Set-ChoVersion` in that folder will (install and) switch to the specified version of terraform and terragrunt -- assuming they're available in your chocolatey lib folder (or your chocolatey sources).
 
-### I feel like I should apologize for the odd syntax of that file....
+Of course, if you're building the array in a script, you can pass it directly to the ChocolateyPackages parameter:
 
-It's a default parameter file for the "Set-ChoVersion" command.
-
-As such, it's setting "Chocolatey" parameter using the `PackageName|Version` syntax that chocolatey outputs when you ask for limited output, e.g. `choco list -lr` -- there's an optional third value "executable" you can provide which is the actual name of the executable (without the .exe extension), in case you need to use, for example, the "Terragruntt" package to install "terragrunt" ...
+```PowerShell
+Set-ChoVersion -ChocolateyPackages @(
+    @{
+        Package = "terraform"
+        Version = "0.14.9"
+    }
+    @{
+        Package = "terragrunt"
+        Version = "0.28.18"
+    }
+)
+```
 
 ## TODO:
 
-1. Support using a shim/symlink to support **permanent** switching. This could work the way chocolatey's install works, by switching out the shims that chocolatey generates for ones which point at the specified version. Honestly, if chocolatey just did this itself, I wouldn't have needed to write this module.
-2. Make installed tools go to the agent tools cache when there is one
+1. Support using a version range, like Install-RequiredModule does.
+2. Support using a shim/symlink to support **permanent** switching. This could work the way chocolatey's install works, by switching out the shims that chocolatey generates for ones which point at the specified version. Honestly, if chocolatey just did this itself, I wouldn't have needed to write this module.
+3. Make installed tools go to the agent tools cache on build systems
+
+### But probably not:
+
 2. Provide a configurable way to provide installers for missing tools without explicitly relying on choco so this can function cross-platform (would need to use an existing install system, like apt-get or homebrew, because I'm not trying to handle arbitrary installs)

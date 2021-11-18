@@ -57,6 +57,7 @@ filter Set-ChoVersion {
         [hashtable[]]$ChocolateyPackages,
 
         # If set, makes the change permanent for the current user by modifying their PATH at user scope
+        [Alias("Permanent")]
         [switch]$SetForUserExperimental
     )
     # Set executable from Package if it's piped in empty

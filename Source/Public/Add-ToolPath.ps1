@@ -2,6 +2,13 @@ filter Add-ToolPath {
     <#
         .SYNOPSIS
             Prepend a path to the PATH environment variable, with support for Github Actions and Azure Pipelines
+        .EXAMPLE
+            Add-ToolPath -Path 'C:\Program Files\Git\bin'
+
+            Adds the Git bin directory to the PATH environment variable for the current process.
+
+            When run in a Github Actions environment, will add the Path to the ENV:GITHUB_PATH files
+            When run in an Azure Pipelines environment, will output a `##vso[task.prependpath]` command
     #>
     [CmdletBinding()]
     param(
@@ -11,6 +18,7 @@ filter Add-ToolPath {
         [string]$Path,
 
         # If set, and on Windows, update the user's PATH
+        [Alias("Permanent")]
         [switch]$SetForUserExperimental
     )
 
@@ -41,7 +49,7 @@ filter Add-ToolPath {
     # }
 
     # On Windows, we can prepend the path in the user environment to make it sticky
-    if ($SetForUser -and (-not (Test-Path Variable:IsWindows) -or $IsWindows)) {
+    if ($SetForUserExperimental -and (-not (Test-Path Variable:IsWindows) -or $IsWindows)) {
 
         [string[]]$EnvPath = [System.Environment]::GetEnvironmentVariable("PATH", "User").Split([IO.Path]::PathSeparator).Where{
             $_ -ine $Path
