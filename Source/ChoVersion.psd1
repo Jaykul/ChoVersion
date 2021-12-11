@@ -21,7 +21,9 @@ Copyright = 'Copyright (c) 2021 by Joel Bennett, all rights reserved.'
 # Description of the functionality provided by this module
 Description = 'A module for switching between multiple versions of command-line tools'
 
-RequiredModules = @('Configuration')
+RequiredModules = @(
+    @{ ModuleName='Configuration'; ModuleVersion='1.5.0' }
+)
 
 # Exports - populated by the build
 FunctionsToExport = @('*')
